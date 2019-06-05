@@ -34,9 +34,11 @@ def get_lyric(url):
     responceList.status_code
     #BeautifulSoupを用いてURL要素を抽出する
     soup = BeautifulSoup(responceList.content,"lxml")
+    #歌詞を抽出する
     lyric = soup.find_all(id='kashi_area')
-    #print(lyric[0].text)
-    return lyric[0].text
+    #曲名を抽出する
+    music = soup.find_all(id='ttl_name_box')
+    return lyric[0].text,music[0].find('span').text.replace('曲名：','')
 
 soupList = get_Html(strUrl)
 classUrl = soupList.find_all(class_='td1')
@@ -48,20 +50,17 @@ for tags in classUrl:
     for a in aTag:
         url = lyricURL + a.attrs['href']
         urls.append(url)
-        #urls.append(a.attrs['href'])
 
-#CSV作成
-f = open(lyricDir + 'lyric_{0:%Y%m%d%H%M%S}'.format(datetime.now()) + '.csv','w')
-writer = csv.writer(f, lineterminator='\n')
-csvlist = []
 #抽出したURLを元に歌詞を取得する
 for lyricUrl in urls:
     soup = get_lyric(lyricUrl)
-    print(soup)
-    csvlist.append(soup)
+    csvlist = []
+    csvlist.append(soup[0])
 
-# 出力
-writer.writerow(csvlist)
-
-# ファイルクローズ
-f.close()
+    #CSV作成
+    f = open(lyricDir + soup[1] + '_{0:%Y%m%d%H%M%S}'.format(datetime.now()) + '.csv','w')
+    writer = csv.writer(f, lineterminator='\n')
+    # 出力
+    writer.writerow(csvlist)
+    # ファイルクローズ
+    f.close()
